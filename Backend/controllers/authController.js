@@ -72,12 +72,25 @@ const login = async (req, res) => {
     }
 }
 
-const getMe = async (req,res) =>{
+const getMe = async (req, res) => {
     try {
-        res.status(200).json({user:req.user});
+        res.status(200).json({ user: req.user });
     } catch (error) {
-        res.status(500).json({message: "Error fetching user data!", error});
+        res.status(500).json({ message: "Error fetching user data!", error });
     }
 }
 
-module.exports = { register, login, getMe };
+const logout = async (req, res) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict"
+        });
+        res.status(200).json({ message: "Logged out successfully!" });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out!", error });
+    }
+}
+
+module.exports = { register, login, getMe, logout};
