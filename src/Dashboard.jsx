@@ -1,3 +1,4 @@
+import Kanbanboard from "./components/Kanbanboard";
 import Sidebar from "./components/Sidebar";
 import { useAuth } from "./context/AuthContext";
 
@@ -17,6 +18,7 @@ const Dashboard = () => {
                             Here's what's on your plate today.
                         </p>
                     </div>
+                    <Kanbanboard />
                 </div>
             </div>
         </>
