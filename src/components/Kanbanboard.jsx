@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import TaskCard from "./TaskCard";
 import AddTaskModal from "./AddTaskModal";
 import axiosInstance from "../lib/axios";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 
 const Kanbanboard = () => {
 
@@ -46,42 +47,83 @@ const Kanbanboard = () => {
         ));
     }
 
+    const onDragEnd = async (result) => {
+        const { destination, source, draggableId } = result;
+
+        if (!destination) return;
+
+        if (destination.droppableId === source.droppableId) return;
+
+        setTasks(tasks.map(task =>
+            task._id === draggableId
+                ? { ...task, status: destination.droppableId }
+                : task
+        ));
+
+        try {
+            await axiosInstance.put(`/tasks/${draggableId}`, {
+                status: destination.droppableId
+            });
+        } catch (error) {
+            console.log(error.response.data.message);
+        }
+    }
+
     return (
         <>
-            <div className="kanbanboard-main flex gap-6">
-                {columns.map((column) => (
-                    <div
-                        key={column.id}
-                        className={`kanban-column flex-1 bg-white rounded-2xl shadow-sm border-t-4 ${column.color} p-5`}>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <div className="kanbanboard-main flex gap-6">
+                    {columns.map((column) => (
+                        <Droppable droppableId={column.id} key={column.id}>
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={`kanban-column flex-1 bg-white rounded-2xl shadow-sm border-t-4 ${column.color} p-5`}
+                                >
+                                    <div className="column-header flex items-center justify-between mb-4">
+                                        <h2 className="font-semibold text-[#2d1b69]">{column.label}</h2>
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${column.badgeColor}`}>
+                                            {tasks.filter(task => task.status === column.id).length}
+                                        </span>
+                                    </div>
 
-                        <div className="column-header flex items-center justify-between mb-4">
-                            <h2 className="font-semibold text-[#2d1b69]">{column.label}</h2>
-                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${column.badgeColor}`}>
-                                {tasks.filter(task => task.status === column.id).length}
-                            </span>
-                        </div>
+                                    <div className="tasks-main flex flex-col gap-3">
+                                        {tasks
+                                            .filter(task => task.status === column.id)
+                                            .map((task, index) => (
+                                                <TaskCard
+                                                    key={task._id}
+                                                    task={task}
+                                                    index={index}
+                                                    onDelete={handleDeleteTask}
+                                                    onUpdate={handleUpdateTask}
+                                                />
+                                            ))
+                                        }
+                                    </div>
 
-                        <div className="tasks-main flex flex-col gap-3">
-                            {
-                                tasks.filter(task => task.status === column.id).map((task) => (
-                                    <TaskCard key={task._id} task={task} onDelete={handleDeleteTask} onUpdate={handleUpdateTask} />
-                                ))
-                            }
-                        </div>
+                                    {provided.placeholder}
 
-                        <button onClick={() => handleAddTask(column.id)}
-                            className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm text-gray-400 hover:text-purple-600 transition-all cursor-pointer"
-                        >
-                            <span>+</span>
-                            <span>Add Task</span>
-                        </button>
-                    </div>
-                ))}
+                                    <button onClick={() => handleAddTask(column.id)}
+                                        className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm text-gray-400 hover:text-purple-600 transition-all cursor-pointer"
+                                    >
+                                        <span>+</span>
+                                        <span>Add Task</span>
+                                    </button>
+                                </div>
+                            )}
+                        </Droppable>
+                    ))}
+                </div>
+            </DragDropContext>
 
-            </div>
-
-            <AddTaskModal isOpen={modalOpen} onClose={() => setModalOpen(false)} status={activeColumn} onAddTask={handleNewTask} />
-
+            <AddTaskModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                status={activeColumn}
+                onAddTask={handleNewTask}
+            />
         </>
     )
 }
