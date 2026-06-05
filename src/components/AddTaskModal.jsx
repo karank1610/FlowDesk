@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import axiosInstance from "../lib/axios";
 
 const AddTaskModal = ({isOpen, onClose, status, onAddTask}) => {
 
@@ -9,7 +10,7 @@ const AddTaskModal = ({isOpen, onClose, status, onAddTask}) => {
         dueDate: useRef(null),
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const title = taskRef.title.current.value;
@@ -19,17 +20,19 @@ const AddTaskModal = ({isOpen, onClose, status, onAddTask}) => {
 
         if (!title) return;
 
-        const newTask = {
-            title,
-            description,
-            priority,
-            dueDate,
-            status, 
+        try {
+            const res = await axiosInstance.post("/tasks",{
+                title,
+                description,
+                priority,
+                dueDate,
+                status,
+            });
+            onAddTask(res.data.task);
+            onClose();
+        } catch (error) {
+            console.error(error);
         }
-
-        console.log("New Task:", newTask); 
-        onAddTask(newTask)
-        onClose();
     }
 
     if (!isOpen) return null;

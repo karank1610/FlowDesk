@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TaskCard from "./TaskCard";
 import AddTaskModal from "./AddTaskModal";
+import axiosInstance from "../lib/axios";
 
 const Kanbanboard = () =>{
 
     const [modalOpen, setModalOpen] = useState(false);
     const [activeColumn, setActiveColumn] =useState(null);
+    const [tasks,setTasks] = useState([]);
 
     const columns = [
         { id: "todo", label:"To Do", color: "border-blue-400", badgeColor: "bg-blue-100 text-blue-600"},
         { id: "inprogress", label:"In Progress", color: "border-yellow-400", badgeColor: "bg-yellow-100 text-yellow-600"},
         { id: "done", label:"Done", color: "border-green-400", badgeColor: "bg-green-100 text-green-600"},
-    ]
+    ];
 
-    const tasks = [];
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const res = await axiosInstance.get("/tasks");
+                setTasks(res.data.tasks);
+            } catch (error) {
+                console.log(error.response.data.message);
+            }
+        }
+        fetchTasks();
+    }, []);
 
     const handleAddTask = (columnId) =>{
         setActiveColumn(columnId);
@@ -21,7 +33,7 @@ const Kanbanboard = () =>{
     }
 
     const handleNewTask = (task) => {
-    console.log("Task to save:", task); 
+        setTasks([...tasks,task]);
 }
 
     return(

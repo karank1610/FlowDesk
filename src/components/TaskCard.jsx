@@ -1,4 +1,4 @@
-const TaskCard =() => {
+const TaskCard =({task}) => {
     const priorityStyles = {
         low: "bg-green-100 text-green-600",
         medium: "bg-yellow-100 text-yellow-600",
