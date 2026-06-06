@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const Sidebar = () => {
+const Sidebar = ({activeFilter, setActiveFilter}) => {
 
     const { user, logout, loading } = useAuth();
-    const [activeLink, setActiveLink] = useState("All Tasks");
 
     const navLinks = [
         { label: "All Tasks", icon: "📋" },
@@ -25,11 +24,11 @@ const Sidebar = () => {
                     return (
                         <button key={link.label}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all cursor-pointer
-                            ${activeLink === link.label
+                            ${activeFilter === link.label
                                     ? "bg-purple-600 text-white font-semibold"
                                     : "text-purple-200 hover:bg-purple-700 hover:text-white"
                                 }`}
-                            onClick={() => setActiveLink(link.label)}>
+                            onClick={() => setActiveFilter(link.label)}>
                             <span>{link.icon}</span>
                             <span>{link.label}</span>
                         </button>

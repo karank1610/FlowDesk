@@ -4,11 +4,11 @@ import AddTaskModal from "./AddTaskModal";
 import axiosInstance from "../lib/axios";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 
-const Kanbanboard = () => {
+const Kanbanboard = ({ activeFilter, tasks, setTasks }) => {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [activeColumn, setActiveColumn] = useState(null);
-    const [tasks, setTasks] = useState([]);
+    // const [tasks, setTasks] = useState([]);
 
     const columns = [
         { id: "todo", label: "To Do", color: "border-blue-400", badgeColor: "bg-blue-100 text-blue-600" },
@@ -16,17 +16,17 @@ const Kanbanboard = () => {
         { id: "done", label: "Done", color: "border-green-400", badgeColor: "bg-green-100 text-green-600" },
     ];
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                const res = await axiosInstance.get("/tasks");
-                setTasks(res.data.tasks);
-            } catch (error) {
-                console.log(error.response.data.message);
-            }
-        }
-        fetchTasks();
-    }, []);
+    // useEffect(() => {
+    //     const fetchTasks = async () => {
+    //         try {
+    //             const res = await axiosInstance.get("/tasks");
+    //             setTasks(res.data.tasks);
+    //         } catch (error) {
+    //             console.log(error.response.data.message);
+    //         }
+    //     }
+    //     fetchTasks();
+    // }, []);
 
     const handleAddTask = (columnId) => {
         setActiveColumn(columnId);
@@ -69,6 +69,41 @@ const Kanbanboard = () => {
         }
     }
 
+    const getFilteredTasks = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        switch (activeFilter) {
+            case "Today":
+                return tasks.filter(task => {
+                    if (!task.dueDate) return false;
+                    const due = new Date(task.dueDate);
+                    due.setHours(0, 0, 0, 0);
+                    return due.getTime() === today.getTime();
+                });
+
+            case "Upcoming":
+                return tasks.filter(task => {
+                    if (!task.dueDate) return false;
+                    const due = new Date(task.dueDate);
+                    due.setHours(0, 0, 0, 0);
+                    return due.getTime() > today.getTime();
+                });
+
+            case "Completed":
+                return tasks.filter(task => task.status === "done");
+
+            default:
+                return tasks;
+        }
+    }
+
+    const filteredTasks = getFilteredTasks();
+
+
     return (
         <>
             <DragDropContext onDragEnd={onDragEnd}>
@@ -84,12 +119,12 @@ const Kanbanboard = () => {
                                     <div className="column-header flex items-center justify-between mb-4">
                                         <h2 className="font-semibold text-[#2d1b69]">{column.label}</h2>
                                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${column.badgeColor}`}>
-                                            {tasks.filter(task => task.status === column.id).length}
+                                            {filteredTasks.filter(task => task.status === column.id).length}
                                         </span>
                                     </div>
 
                                     <div className="tasks-main flex flex-col gap-3">
-                                        {tasks
+                                        {filteredTasks
                                             .filter(task => task.status === column.id)
                                             .map((task, index) => (
                                                 <TaskCard
